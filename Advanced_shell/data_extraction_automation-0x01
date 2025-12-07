@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 
 # Task 1: Extract Pokemon Data
 # Parse data.json and format output using jq, awk, and sed
@@ -10,11 +10,19 @@ if [ ! -f "${JSON_FILE}" ]; then
     exit 1
 fi
 
-# Extract name, height, weight, and type using jq
-NAME=$(jq -r '.name' "${JSON_FILE}" | sed 's/^./\U&/')
-HEIGHT=$(jq -r '.height' "${JSON_FILE}" | awk '{printf "%.1f", $1/10}')
-WEIGHT=$(jq -r '.weight' "${JSON_FILE}" | awk '{printf "%.0f", $1/10}')
-TYPE=$(jq -r '.types[0].type.name' "${JSON_FILE}" | sed 's/^./\U&/')
+# Extract name using jq and capitalize first letter with sed
+name=$(jq -r '.name' "${JSON_FILE}" | sed 's/^./\U&/')
 
-# Format and print output
-echo "${NAME} is of type ${TYPE}, weighs ${WEIGHT}kg, and is ${HEIGHT}m tall."
+# Extract type and capitalize first letter
+type=$(jq -r '.types[0].type.name' "${JSON_FILE}" | sed 's/^./\U&/')
+
+# Extract weight and height, convert from decigrams/decimeters
+weight=$(jq -r '.weight' "${JSON_FILE}")
+height=$(jq -r '.height' "${JSON_FILE}")
+
+# Format using awk - weight in kg (no decimal), height in m (1 decimal)
+formatted_weight=$(echo "$weight" | awk '{printf "%d", $1/10}')
+formatted_height=$(echo "$height" | awk '{printf "%.1f", $1/10}')
+
+# Output in the exact format required
+echo "$name is of type $type, weighs ${formatted_weight}kg, and is ${formatted_height}m tall."
