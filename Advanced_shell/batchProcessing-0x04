@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 
 # Task 5: Parallel Data Fetching
 # Fetch multiple Pokemon data in parallel using background processes
@@ -30,7 +30,7 @@ fetch_pokemon() {
         http_code=$(curl -s -o "${output_file}" -w "%{http_code}" "${API_BASE}/${pokemon}")
         
         if [ "${http_code}" -eq 200 ]; then
-            echo "Saved data to ${output_file} ✅"
+            echo "Saved data to ${output_file} "
             return 0
         else
             echo "Attempt ${attempt}/${MAX_RETRIES} failed for ${pokemon} (HTTP ${http_code})"
@@ -47,11 +47,26 @@ fetch_pokemon() {
     return 1
 }
 
+# Cleanup function to kill background jobs on exit
+cleanup() {
+    echo "Cleaning up background processes..."
+    jobs -p | xargs -r kill 2>/dev/null
+    wait
+}
+
+# Set trap for cleanup on script exit
+trap cleanup EXIT INT TERM
+
 # Launch all fetches in parallel
+echo "Starting parallel fetch for ${#POKEMON_LIST[@]} Pokemon..."
 for pokemon in "${POKEMON_LIST[@]}"; do
     fetch_pokemon "${pokemon}" &
     PIDS+=($!)
 done
+
+# Show running background jobs
+echo "Active background jobs:"
+jobs
 
 # Wait for all background processes to complete
 echo "Waiting for all parallel processes to complete..."
